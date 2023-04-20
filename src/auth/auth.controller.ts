@@ -39,14 +39,12 @@ export class AuthController {
   ) {}
 
   @Get('/csrf-token')
-  @HttpCode(HttpStatus.OK)
   getCsrfToken(@Req() req): CsrfTokenResponse {
     return { csrfToken: req.csrfToken() };
   }
 
   @Post('/sign-up')
   @Csrf()
-  @HttpCode(HttpStatus.CREATED)
   async signUp(
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) res: Response,
@@ -58,7 +56,6 @@ export class AuthController {
 
   @Post('login')
   @Csrf()
-  @HttpCode(HttpStatus.CREATED)
   async login(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
@@ -73,36 +70,34 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard, RefreshTokenGuard)
   async logout(
-    @AuthUser() authUserData: AuthUserData,
+    @AuthUser() authUser: AuthUserData,
     @Res({ passthrough: true }) res: Response,
   ) {
-    await this.authService.logout(authUserData.refreshTokenId);
+    await this.authService.logout(authUser.refreshTokenId);
     this.removeRefreshTokenCookie(res);
   }
 
   @Get('/profile')
-  @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard)
   async profile(
-    @AuthUser() authUserData: AuthUserData,
+    @AuthUser() authUser: AuthUserData,
   ): Promise<Omit<User, 'password'>> {
     return excludeUserKeys(
-      await this.userService.findOneById(authUserData.user.id),
+      await this.userService.findOneById(authUser.user.id),
       ['password'],
     );
   }
 
   @Post(`${REFRESH_TOKEN_PATH}/refresh-tokens`)
   @Csrf()
-  @HttpCode(HttpStatus.CREATED)
   @UseGuards(RefreshTokenGuard)
   async refreshTokens(
-    @AuthUser() authUserData: AuthUserData,
+    @AuthUser() authUser: AuthUserData,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AccessTokenResponse> {
     const tokens = await this.authService.refreshTokens(
-      authUserData.user,
-      authUserData.refreshTokenId,
+      authUser.user,
+      authUser.refreshTokenId,
     );
     this.setRefreshTokenCookie(res, tokens.refreshToken);
     return { accessToken: tokens.accessToken };
@@ -119,29 +114,4 @@ export class AuthController {
   private removeRefreshTokenCookie(res: Response) {
     res.clearCookie(REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE_OPTIONS);
   }
-
-  // @Post()
-  // create(@Body() createAuthDto: CreateAuthDto) {
-  //   return this.authService.create(createAuthDto);
-  // }
-
-  // @Get()
-  // findAll() {
-  //   return this.authService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.authService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-  //   return this.authService.update(+id, updateAuthDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.authService.remove(+id);
-  // }
 }

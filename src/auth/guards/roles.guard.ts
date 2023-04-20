@@ -2,13 +2,16 @@ import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { ROLES_DECORATOR_NAME } from 'src/auth/constants';
+import { AuthUserData } from 'src/auth/types';
 import { Exception } from 'src/exceptions';
 
-export class RoleGuard implements CanActivate {
+@Injectable()
+export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
@@ -17,9 +20,12 @@ export class RoleGuard implements CanActivate {
       context.getHandler(),
     );
     const request = context.switchToHttp().getRequest();
-    const user: User = request?.user;
+    const authUser: AuthUserData = request?.user;
 
-    if (!user || !user.roles.some((role) => roles.includes(role))) {
+    if (
+      !authUser ||
+      !authUser.user.roles.some((role) => roles.includes(role))
+    ) {
       throw new ForbiddenException(Exception.USER_ROLE_ACCESS_DENIED);
     }
 

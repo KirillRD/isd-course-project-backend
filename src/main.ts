@@ -4,6 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { nestCsrf } from 'ncsrf';
 import cookieParser from 'cookie-parser';
 import HTTPMethod from 'http-method-enum';
+import { ValidationPipe } from '@nestjs/common';
 
 enum AllowedHeaders {
   ACCEPT = 'Accept',
@@ -23,6 +24,8 @@ enum AllowedMethods {
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(new ValidationPipe());
 
   app.enableCors({
     credentials: true,
