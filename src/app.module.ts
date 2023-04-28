@@ -8,6 +8,9 @@ import { ReviewModule } from './review/review.module';
 import { CreationModule } from './creation/creation.module';
 import { CreationCategoryModule } from './creation-category/creation-category.module';
 import { RoleModule } from './role/role.module';
+import { TagModule } from './tag/tag.module';
+import { ReviewImageModule } from './review-image/review-image.module';
+import { ImageKitModule } from './image-kit/image-kit.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { RoleModule } from './role/role.module';
     CreationModule,
     CreationCategoryModule,
     RoleModule,
+    TagModule,
+    ReviewImageModule,
+    ImageKitModule,
   ],
 })
 export class AppModule {}

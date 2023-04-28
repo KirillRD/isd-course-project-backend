@@ -25,6 +25,8 @@ model User {
   roles               Role[]                @default([USER])
   issuedRefreshTokens IssuedRefreshToken[]  @relation("user_to_issuedRefreshTokens")
   reviews             Review[]              @relation("user_to_reviews")
+  reviewLikes         Review[]              @relation("user_likes_on_reviews")
+  creationRatings     CreationRating[]      @relation("user_to_creationRatings")
 
   @@map("users")
 }
@@ -47,24 +49,59 @@ enum CreationCategory {
 }
 
 model Creation {
-  id        Int               @id @default(autoincrement())
-  title     String            @db.VarChar(150)
-  category  CreationCategory
-  reviews   Review[]          @relation("creation_to_reviews")
+  id          Int               @id @default(autoincrement())
+  title       String            @db.VarChar(150)
+  description String            @db.VarChar(1000)
+  category    CreationCategory
+  reviews     Review[]          @relation("creation_to_reviews")
+  ratings     CreationRating[]  @relation("creation_to_creationRatings")
 
   @@map("creations")
+  @@unique([title, category])
 }
 
 model Review {
-  id          Int       @id @default(autoincrement())
-  user        User      @relation("user_to_reviews", fields: [userId], references: [id])
+  id          Int           @id @default(autoincrement())
+  user        User          @relation("user_to_reviews", fields: [userId], references: [id])
   userId      Int
-  creation    Creation  @relation("creation_to_reviews", fields: [creationId], references: [id])
+  creation    Creation      @relation("creation_to_reviews", fields: [creationId], references: [id])
   creationId  Int
-  title       String    @db.VarChar(150)
-  body        String    @db.Text
-  grade       Int       @db.SmallInt
-  createDate  DateTime  @default(now())
+  title       String        @db.VarChar(150)
+  body        String        @db.Text
+  grade       Int           @db.SmallInt
+  createDate  DateTime      @default(now())
+  tags        Tag[]         @relation("reviews_to_tags")
+  images      ReviewImage[] @relation("review_to_reviewImages")
+  userLikes   User[]        @relation("user_likes_on_reviews")
 
   @@map("reviews")
+}
+
+model Tag {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique @db.VarChar(30)
+  reviews Review[]  @relation("reviews_to_tags")
+
+  @@map("tags")
+}
+
+model ReviewImage {
+  id        Int     @id @default(autoincrement())
+  review    Review  @relation("review_to_reviewImages", fields: [reviewId], references: [id])
+  reviewId  Int
+  fileId    String  @db.VarChar(50)
+  url       String  @db.Text
+
+  @@map("review_images")
+}
+
+model CreationRating {
+  creation  Creation  @relation("creation_to_creationRatings", fields: [creationId], references: [id])
+  creationId  Int
+  user  User  @relation("user_to_creationRatings", fields: [userId], references: [id])
+  userId  Int
+  rating  Int
+
+  @@id([creationId, userId])
+  @@map("creation_ratings")
 }

@@ -51,7 +51,7 @@ export class UserController {
     if (!authUser.user.roles.includes(Role.ADMIN) && authUser.user.id != id) {
       throw new ForbiddenException(Exception.USER_ROLE_ACCESS_DENIED);
     }
-    return await this.userService.findOneByIdWithReviews(id);
+    return await this.userService.findOneByIdOrThrow(id);
   }
 
   @Patch(':id')

@@ -71,8 +71,8 @@ export class UserService {
     });
   }
 
-  async findOneByIdWithReviews(id: number): Promise<User | null> {
-    return await this.prisma.user.findUnique({
+  async findOneByIdOrThrow(id: number): Promise<User | null> {
+    return await this.prisma.user.findUniqueOrThrow({
       where: { id },
       include: {
         reviews: {

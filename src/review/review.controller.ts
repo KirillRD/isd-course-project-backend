@@ -9,6 +9,7 @@ import {
   Query,
   ParseIntPipe,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -22,8 +23,8 @@ export class ReviewController {
   constructor(private readonly reviewService: ReviewService) {}
 
   @Post()
-  // @Csrf()
-  // @UseGuards(AccessTokenGuard)
+  @Csrf()
+  @UseGuards(AccessTokenGuard)
   async create(@Body() createReviewDto: CreateReviewDto): Promise<Review> {
     return await this.reviewService.create(createReviewDto);
   }
@@ -41,7 +42,7 @@ export class ReviewController {
     return await this.reviewService.findOneById(id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   @Csrf()
   @UseGuards(AccessTokenGuard)
   async update(
@@ -54,7 +55,7 @@ export class ReviewController {
   @Delete(':id')
   @Csrf()
   @UseGuards(AccessTokenGuard)
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<Review> {
-    return await this.reviewService.remove(id);
+  async delete(@Param('id', ParseIntPipe) id: number): Promise<Review> {
+    return await this.reviewService.delete(id);
   }
 }

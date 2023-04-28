@@ -5,6 +5,7 @@ import { nestCsrf } from 'ncsrf';
 import cookieParser from 'cookie-parser';
 import HTTPMethod from 'http-method-enum';
 import { ValidationPipe } from '@nestjs/common';
+import { json, urlencoded } from 'express';
 
 enum AllowedHeaders {
   ACCEPT = 'Accept',
@@ -26,6 +27,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe());
+
+  app.use(json({ limit: process.env.REQUEST_LIMIT }));
+  app.use(urlencoded({ limit: process.env.REQUEST_LIMIT, extended: true }));
 
   app.enableCors({
     credentials: true,
