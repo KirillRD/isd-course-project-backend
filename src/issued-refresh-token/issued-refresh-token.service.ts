@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateIssuedRefreshTokenDto } from './dto/create-issued-refresh-token.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { IssuedRefreshToken } from '@prisma/client';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class IssuedRefreshTokenService {

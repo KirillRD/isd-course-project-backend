@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { User } from '@prisma/client';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class UserService {
@@ -71,7 +71,7 @@ export class UserService {
     });
   }
 
-  async findOneByIdOrThrow(id: number): Promise<User | null> {
+  async findOneByIdOrThrow(id: number): Promise<User> {
     return await this.prisma.user.findUniqueOrThrow({
       where: { id },
       include: {

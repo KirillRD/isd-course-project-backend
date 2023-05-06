@@ -1,9 +1,10 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateCreationDto } from './dto/create-creation.dto';
 import { UpdateCreationDto } from './dto/update-creation.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Creation, CreationCategory } from '@prisma/client';
 import { Exception } from 'src/exceptions';
+import { CreationDto } from 'src/creation/dto/creation.dto';
+import { PrismaService } from 'nestjs-prisma';
 
 @Injectable()
 export class CreationService {
@@ -47,10 +48,45 @@ export class CreationService {
     });
   }
 
-  async findOneById(id: number): Promise<Creation | null> {
-    return await this.prisma.creation.findUniqueOrThrow({
+  async getAverageRating(creationId: number): Promise<number> {
+    const averageRating = (
+      (await this.prisma.creationRating.aggregate({
+        _avg: { rating: true },
+        where: {
+          creationId,
+        },
+      })) as any
+    )._avg.rating as number | null;
+    return averageRating ?? 0;
+  }
+
+  async getUserRating(userId: number, creationId: number): Promise<number> {
+    const creationRating = await this.prisma.creationRating.findFirst({
+      where: {
+        userId,
+        creationId,
+      },
+    });
+    return creationRating ? creationRating.rating : 0;
+  }
+
+  async findOneById(id: number, userId?: number): Promise<CreationDto> {
+    const creation = await this.prisma.creation.findUniqueOrThrow({
       where: { id },
     });
+    const averageRating = await this.getAverageRating(id);
+
+    const creationDto: CreationDto = {
+      ...creation,
+      averageRating,
+    };
+
+    if (userId) {
+      const userRating = await this.getUserRating(userId, id);
+      creationDto.userRating = userRating;
+    }
+
+    return creationDto;
   }
 
   // update(id: number, updateCreationDto: UpdateCreationDto) {

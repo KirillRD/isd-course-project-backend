@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { nestCsrf } from 'ncsrf';
 import cookieParser from 'cookie-parser';
-import HTTPMethod from 'http-method-enum';
 import { ValidationPipe } from '@nestjs/common';
 import { json, urlencoded } from 'express';
+import { HttpMethod } from 'http-enums';
+import { PrismaService } from 'nestjs-prisma';
 
 enum AllowedHeaders {
   ACCEPT = 'Accept',
@@ -15,12 +15,12 @@ enum AllowedHeaders {
 }
 
 enum AllowedMethods {
-  GET = HTTPMethod.GET,
-  POST = HTTPMethod.POST,
-  PUT = HTTPMethod.PUT,
-  PATCH = HTTPMethod.PATCH,
-  DELETE = HTTPMethod.DELETE,
-  OPTIONS = HTTPMethod.OPTIONS,
+  GET = HttpMethod.GET,
+  POST = HttpMethod.POST,
+  PUT = HttpMethod.PUT,
+  PATCH = HttpMethod.PATCH,
+  DELETE = HttpMethod.DELETE,
+  OPTIONS = HttpMethod.OPTIONS,
 }
 
 async function bootstrap() {

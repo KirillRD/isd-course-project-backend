@@ -27,6 +27,7 @@ model User {
   reviews             Review[]              @relation("user_to_reviews")
   reviewLikes         Review[]              @relation("user_likes_on_reviews")
   creationRatings     CreationRating[]      @relation("user_to_creationRatings")
+  reviewComments      ReviewComment[]       @relation("user_to_reviewComments")
 
   @@map("users")
 }
@@ -61,18 +62,19 @@ model Creation {
 }
 
 model Review {
-  id          Int           @id @default(autoincrement())
-  user        User          @relation("user_to_reviews", fields: [userId], references: [id])
+  id          Int             @id @default(autoincrement())
+  user        User            @relation("user_to_reviews", fields: [userId], references: [id])
   userId      Int
-  creation    Creation      @relation("creation_to_reviews", fields: [creationId], references: [id])
+  creation    Creation        @relation("creation_to_reviews", fields: [creationId], references: [id])
   creationId  Int
-  title       String        @db.VarChar(150)
-  body        String        @db.Text
-  grade       Int           @db.SmallInt
-  createDate  DateTime      @default(now())
-  tags        Tag[]         @relation("reviews_to_tags")
-  images      ReviewImage[] @relation("review_to_reviewImages")
-  userLikes   User[]        @relation("user_likes_on_reviews")
+  title       String          @db.VarChar(150)
+  body        String          @db.Text
+  grade       Int             @db.SmallInt
+  createDate  DateTime        @default(now())
+  tags        Tag[]           @relation("reviews_to_tags")
+  images      ReviewImage[]   @relation("review_to_reviewImages")
+  userLikes   User[]          @relation("user_likes_on_reviews")
+  comments    ReviewComment[] @relation("review_to_reviewComments")
 
   @@map("reviews")
 }
@@ -96,12 +98,24 @@ model ReviewImage {
 }
 
 model CreationRating {
-  creation  Creation  @relation("creation_to_creationRatings", fields: [creationId], references: [id])
+  creation    Creation  @relation("creation_to_creationRatings", fields: [creationId], references: [id])
   creationId  Int
-  user  User  @relation("user_to_creationRatings", fields: [userId], references: [id])
-  userId  Int
-  rating  Int
+  user        User      @relation("user_to_creationRatings", fields: [userId], references: [id])
+  userId      Int
+  rating      Int
 
   @@id([creationId, userId])
   @@map("creation_ratings")
+}
+
+model ReviewComment {
+  id          Int       @id @default(autoincrement())
+  review      Review    @relation("review_to_reviewComments", fields: [reviewId], references: [id])
+  reviewId    Int
+  user        User      @relation("user_to_reviewComments", fields: [userId], references: [id])
+  userId      Int
+  comment     String    @db.VarChar(2000)
+  createDate  DateTime  @default(now())
+
+  @@map("review_comments")
 }

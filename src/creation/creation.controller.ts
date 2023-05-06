@@ -16,6 +16,8 @@ import { UpdateCreationDto } from './dto/update-creation.dto';
 import { Creation } from '@prisma/client';
 import { AccessTokenGuard } from 'src/auth/guards/access-token.guard';
 import { Csrf } from 'ncsrf';
+import { CreationDto } from 'src/creation/dto/creation.dto';
+import { AuthUserId } from 'src/auth/decorators/auth-user-id.decorator';
 
 @Controller('creations')
 export class CreationController {
@@ -31,15 +33,17 @@ export class CreationController {
   }
 
   @Get()
-  @UseGuards(AccessTokenGuard)
   async find(@Query('search') search: string): Promise<Creation[]> {
     return await this.creationService.find(search);
   }
 
   @Get(':id')
   @UseGuards(AccessTokenGuard)
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Creation> {
-    return await this.creationService.findOneById(id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @AuthUserId() userId: number | undefined,
+  ): Promise<CreationDto> {
+    return await this.creationService.findOneById(id, userId);
   }
 
   // @Patch(':id')
