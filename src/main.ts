@@ -39,7 +39,13 @@ async function bootstrap() {
   });
 
   app.use(cookieParser(process.env.COOKIE_SECRET));
-  app.use(nestCsrf({ signed: true, sameSite: 'none' }));
+  app.use(
+    nestCsrf({
+      signed: true,
+      sameSite: 'none',
+      secure: Boolean(process.env.IS_PROD),
+    }),
+  );
 
   const prismaService = app.get(PrismaService);
   await prismaService.enableShutdownHooks(app);
