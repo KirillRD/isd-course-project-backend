@@ -1,8 +1,7 @@
 import { AuthType } from '@prisma/client';
 
-export class CreateUserDto {
+export class SocialLoginDto {
   email: string;
-  password?: string;
   name: string;
-  authType?: AuthType;
+  authType: AuthType;
 }

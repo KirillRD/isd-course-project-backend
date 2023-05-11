@@ -7,15 +7,16 @@ export class ReviewDto implements ReviewSchema {
   userId: number;
   creationId: number;
   title: string;
-  body?: string;
+  body: string;
   grade: number;
   createDate: Date;
   user?: User;
   creation?: CreationDto;
   tags?: Tag[];
   images?: ReviewImage[];
+  userLikes?: User[];
   _count?: {
     userLikes?: number;
+    comments?: number;
   };
-  userLike?: boolean;
 }

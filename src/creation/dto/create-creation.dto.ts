@@ -4,4 +4,5 @@ export class CreateCreationDto {
   title: string;
   description: string;
   category: CreationCategory;
+  imageFile: string;
 }

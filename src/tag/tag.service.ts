@@ -6,9 +6,12 @@ import { PrismaService } from 'nestjs-prisma';
 export class TagService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async find(search: string): Promise<Tag[]> {
+  async find(search: string, tagIds: undefined | number[]): Promise<Tag[]> {
     return await this.prisma.tag.findMany({
       where: {
+        id: {
+          in: tagIds,
+        },
         name: {
           startsWith: search,
           mode: 'insensitive',

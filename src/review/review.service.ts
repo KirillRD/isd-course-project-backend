@@ -70,7 +70,7 @@ export class ReviewService {
   }
 
   async find(queries: FindReviewsQuery): Promise<ReviewDto[]> {
-    const reviews = await this.prisma.review.findMany({
+    const reviews: ReviewDto[] = await this.prisma.review.findMany({
       skip: queries.size * queries.page - queries.size,
       take: queries.size,
       where: {
@@ -94,9 +94,7 @@ export class ReviewService {
           },
         }),
       },
-      orderBy: {
-        ...reviewOrderOptions[queries.order],
-      },
+      orderBy: [...reviewOrderOptions[queries.order]],
       include: {
         user: {
           include: {
@@ -107,28 +105,36 @@ export class ReviewService {
             },
           },
         },
-        creation: true,
+        creation: {
+          include: {
+            _count: {
+              select: {
+                reviews: true,
+              },
+            },
+          },
+        },
         tags: true,
         _count: {
           select: {
             userLikes: true,
+            comments: true,
           },
         },
       },
     });
+
     return await Promise.all(
       reviews.map(async (review) => {
-        const creationAverageRating =
-          await this.creationService.getAverageRating(review.creation.id);
-        const reviewDto = { ...review } as unknown as ReviewDto;
-        reviewDto.creation.averageRating = creationAverageRating;
-        return reviewDto;
+        review.creation.averageRating =
+          await this.creationService.getAverageRating(review.creationId);
+        return review;
       }),
     );
   }
 
-  async getReview(id: number): Promise<Review> {
-    return await this.prisma.review.findUniqueOrThrow({
+  async findOneById(id: number, userId?: number): Promise<ReviewDto> {
+    const review: ReviewDto = await this.prisma.review.findUniqueOrThrow({
       where: { id },
       include: {
         user: {
@@ -140,8 +146,31 @@ export class ReviewService {
             },
           },
         },
+        creation: {
+          include: {
+            ...(userId && {
+              ratings: {
+                where: {
+                  userId,
+                },
+              },
+            }),
+            _count: {
+              select: {
+                reviews: true,
+              },
+            },
+          },
+        },
         tags: true,
         images: true,
+        ...(userId && {
+          userLikes: {
+            where: {
+              id: userId,
+            },
+          },
+        }),
         _count: {
           select: {
             userLikes: true,
@@ -149,39 +178,12 @@ export class ReviewService {
         },
       },
     });
-  }
 
-  async getUserLike(userId: number, reviewId: number): Promise<boolean> {
-    return !!(await this.prisma.review.findFirst({
-      where: {
-        id: reviewId,
-        userLikes: {
-          some: {
-            id: userId,
-          },
-        },
-      },
-    }));
-  }
-
-  async findOneById(id: number, userId?: number): Promise<ReviewDto> {
-    const review = await this.getReview(id);
-    const creation = await this.creationService.findOneById(
+    review.creation.averageRating = await this.creationService.getAverageRating(
       review.creationId,
-      userId,
     );
 
-    const reviewDto: ReviewDto = {
-      ...review,
-      creation,
-    };
-
-    if (userId) {
-      const userLike = await this.getUserLike(userId, id);
-      reviewDto.userLike = userLike;
-    }
-
-    return reviewDto;
+    return review;
   }
 
   async update(id: number, updateReviewDto: UpdateReviewDto): Promise<Review> {
@@ -214,6 +216,9 @@ export class ReviewService {
   }
 
   async delete(id: number): Promise<Review> {
+    const oldImages = ((await this.findOneById(id)) as any)
+      .images as ReviewImage[];
+    this.imageKit.deleteImages(oldImages.map((oldImage) => oldImage.fileId));
     return await this.prisma.review.delete({
       where: { id },
     });

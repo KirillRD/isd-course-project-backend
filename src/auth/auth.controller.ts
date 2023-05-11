@@ -28,41 +28,67 @@ import {
 } from 'src/auth/types';
 import { AuthUser } from 'src/auth/decorators/auth-user.decorator';
 import { UserService } from 'src/user/user.service';
-import { User } from '@prisma/client';
+import { AuthType, User } from '@prisma/client';
 import { excludeUserKeys } from 'src/user/util';
+import { GoogleService } from 'src/auth/google.service';
+import { SocialLoginDto } from 'src/auth/dto/social-login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
+    private readonly googleService: GoogleService,
   ) {}
 
-  @Get('/csrf-token')
+  @Get('csrf-token')
   getCsrfToken(@Req() req): CsrfTokenResponse {
     return { csrfToken: req.csrfToken() };
   }
 
-  @Post('/sign-up')
-  @Csrf()
   async signUp(
+    signUpDto: SignUpDto,
+    response: Response,
+  ): Promise<AccessTokenResponse> {
+    const tokens = await this.authService.signUp(signUpDto);
+    this.setRefreshTokenCookie(response, tokens.refreshToken);
+    return { accessToken: tokens.accessToken };
+  }
+
+  async login(
+    loginDto: LoginDto,
+    response: Response,
+  ): Promise<AccessTokenResponse> {
+    const tokens = await this.authService.login(loginDto);
+    this.setRefreshTokenCookie(response, tokens.refreshToken);
+    return { accessToken: tokens.accessToken };
+  }
+
+  async socialLogin(
+    socialLoginDto: SocialLoginDto,
+    response: Response,
+  ): Promise<AccessTokenResponse> {
+    const tokens = await this.authService.socialLogin(socialLoginDto);
+    this.setRefreshTokenCookie(response, tokens.refreshToken);
+    return { accessToken: tokens.accessToken };
+  }
+
+  @Post('sign-up')
+  @Csrf()
+  async signUpPassword(
     @Body() signUpDto: SignUpDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AccessTokenResponse> {
-    const tokens = await this.authService.signUp(signUpDto);
-    this.setRefreshTokenCookie(res, tokens.refreshToken);
-    return { accessToken: tokens.accessToken };
+    return await this.signUp(signUpDto, res);
   }
 
   @Post('login')
   @Csrf()
-  async login(
+  async loginPassword(
     @Body() loginDto: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<AccessTokenResponse> {
-    const tokens = await this.authService.login(loginDto);
-    this.setRefreshTokenCookie(res, tokens.refreshToken);
-    return { accessToken: tokens.accessToken };
+    return await this.login(loginDto, res);
   }
 
   @Post(`${REFRESH_TOKEN_PATH}/logout`)
@@ -77,7 +103,7 @@ export class AuthController {
     this.removeRefreshTokenCookie(res);
   }
 
-  @Get('/profile')
+  @Get('profile')
   @UseGuards(AccessTokenGuard)
   async profile(
     @AuthUser() authUser: AuthUserData,
@@ -101,6 +127,23 @@ export class AuthController {
     );
     this.setRefreshTokenCookie(res, tokens.refreshToken);
     return { accessToken: tokens.accessToken };
+  }
+
+  @Post('google-login')
+  async googleLogin(
+    @Body() credentialBody: { credential: string },
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<AccessTokenResponse> {
+    const userData = await this.googleService.getUserData(
+      credentialBody.credential,
+    );
+    return await this.socialLogin(
+      {
+        ...userData,
+        authType: AuthType.GOOGLE,
+      },
+      res,
+    );
   }
 
   private setRefreshTokenCookie(res: Response, refreshToken: string) {

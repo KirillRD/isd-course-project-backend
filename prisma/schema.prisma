@@ -15,13 +15,19 @@ enum Role {
   ADMIN
 }
 
+enum AuthType {
+  PASSWORD
+  GOOGLE
+}
+
 model User {
   id                  Int                   @id @default(autoincrement())
   email               String                @unique @db.VarChar(50)
-  password            String                @db.VarChar(255)
+  password            String?               @db.VarChar(255)
   name                String                @db.VarChar(100)
   signUpDate          DateTime              @default(now())
   isLock              Boolean               @default(false)
+  authType            AuthType              @default(PASSWORD)
   roles               Role[]                @default([USER])
   issuedRefreshTokens IssuedRefreshToken[]  @relation("user_to_issuedRefreshTokens")
   reviews             Review[]              @relation("user_to_reviews")
@@ -34,7 +40,7 @@ model User {
 
 model IssuedRefreshToken {
   id            Int     @id @default(autoincrement())
-  user          User    @relation("user_to_issuedRefreshTokens", fields: [userId], references: [id])
+  user          User    @relation("user_to_issuedRefreshTokens", fields: [userId], references: [id], onDelete: Cascade)
   userId        Int
   refreshToken  String  @unique
 
@@ -53,6 +59,8 @@ model Creation {
   id          Int               @id @default(autoincrement())
   title       String            @db.VarChar(150)
   description String            @db.VarChar(1000)
+  imageId     String            @db.VarChar(50)
+  imageUrl    String            @db.Text
   category    CreationCategory
   reviews     Review[]          @relation("creation_to_reviews")
   ratings     CreationRating[]  @relation("creation_to_creationRatings")
@@ -63,7 +71,7 @@ model Creation {
 
 model Review {
   id          Int             @id @default(autoincrement())
-  user        User            @relation("user_to_reviews", fields: [userId], references: [id])
+  user        User            @relation("user_to_reviews", fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
   creation    Creation        @relation("creation_to_reviews", fields: [creationId], references: [id])
   creationId  Int
@@ -89,7 +97,7 @@ model Tag {
 
 model ReviewImage {
   id        Int     @id @default(autoincrement())
-  review    Review  @relation("review_to_reviewImages", fields: [reviewId], references: [id])
+  review    Review  @relation("review_to_reviewImages", fields: [reviewId], references: [id], onDelete: Cascade)
   reviewId  Int
   fileId    String  @db.VarChar(50)
   url       String  @db.Text
@@ -100,7 +108,7 @@ model ReviewImage {
 model CreationRating {
   creation    Creation  @relation("creation_to_creationRatings", fields: [creationId], references: [id])
   creationId  Int
-  user        User      @relation("user_to_creationRatings", fields: [userId], references: [id])
+  user        User      @relation("user_to_creationRatings", fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
   rating      Int
 
@@ -110,9 +118,9 @@ model CreationRating {
 
 model ReviewComment {
   id          Int       @id @default(autoincrement())
-  review      Review    @relation("review_to_reviewComments", fields: [reviewId], references: [id])
+  review      Review    @relation("review_to_reviewComments", fields: [reviewId], references: [id], onDelete: Cascade)
   reviewId    Int
-  user        User      @relation("user_to_reviewComments", fields: [userId], references: [id])
+  user        User      @relation("user_to_reviewComments", fields: [userId], references: [id], onDelete: Cascade)
   userId      Int
   comment     String    @db.VarChar(2000)
   createDate  DateTime  @default(now())

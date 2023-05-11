@@ -5,32 +5,63 @@ import { Creation, CreationCategory } from '@prisma/client';
 import { Exception } from 'src/exceptions';
 import { CreationDto } from 'src/creation/dto/creation.dto';
 import { PrismaService } from 'nestjs-prisma';
+import { ImageKitService } from 'src/image-kit/image-kit.service';
 
 @Injectable()
 export class CreationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly imageKit: ImageKitService,
+  ) {}
 
   async create(createCreationDto: CreateCreationDto): Promise<Creation> {
-    const creation = await this.findOneByTitleAndCategory(
+    const creationExists = await this.findOneByTitleAndCategory(
       createCreationDto.title,
       createCreationDto.category,
     );
-    if (creation)
+    if (creationExists)
       throw new ConflictException(Exception.CREATION_TITLE_AND_CATEGORY_EXISTS);
+    const { imageFile, ...creation } = createCreationDto;
+    const image = (await this.imageKit.uploadImages([imageFile]))[0];
     return await this.prisma.creation.create({
-      data: createCreationDto,
+      data: {
+        ...creation,
+        imageId: image.fileId,
+        imageUrl: image.url,
+      },
     });
   }
 
-  async find(search: string): Promise<Creation[]> {
-    return await this.prisma.creation.findMany({
+  async find(search: string, userId?: number): Promise<CreationDto[]> {
+    const creations: CreationDto[] = await this.prisma.creation.findMany({
       where: {
         title: {
           contains: search,
           mode: 'insensitive',
         },
       },
+      include: {
+        ...(userId && {
+          ratings: {
+            where: {
+              userId,
+            },
+          },
+        }),
+        _count: {
+          select: {
+            reviews: true,
+          },
+        },
+      },
     });
+
+    return await Promise.all(
+      creations.map(async (creation) => {
+        creation.averageRating = await this.getAverageRating(creation.id);
+        return creation;
+      }),
+    );
   }
 
   async findOneByTitleAndCategory(
@@ -60,40 +91,27 @@ export class CreationService {
     return averageRating ?? 0;
   }
 
-  async getUserRating(userId: number, creationId: number): Promise<number> {
-    const creationRating = await this.prisma.creationRating.findFirst({
-      where: {
-        userId,
-        creationId,
+  async findOneById(id: number, userId?: number): Promise<CreationDto> {
+    const creation: CreationDto = await this.prisma.creation.findUniqueOrThrow({
+      where: { id },
+      include: {
+        ...(userId && {
+          ratings: {
+            where: {
+              userId,
+            },
+          },
+        }),
+        _count: {
+          select: {
+            reviews: true,
+          },
+        },
       },
     });
-    return creationRating ? creationRating.rating : 0;
+
+    creation.averageRating = await this.getAverageRating(id);
+
+    return creation;
   }
-
-  async findOneById(id: number, userId?: number): Promise<CreationDto> {
-    const creation = await this.prisma.creation.findUniqueOrThrow({
-      where: { id },
-    });
-    const averageRating = await this.getAverageRating(id);
-
-    const creationDto: CreationDto = {
-      ...creation,
-      averageRating,
-    };
-
-    if (userId) {
-      const userRating = await this.getUserRating(userId, id);
-      creationDto.userRating = userRating;
-    }
-
-    return creationDto;
-  }
-
-  // update(id: number, updateCreationDto: UpdateCreationDto) {
-  //   return `This action updates a #${id} creation`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} creation`;
-  // }
 }

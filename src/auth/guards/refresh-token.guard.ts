@@ -14,8 +14,9 @@ export class RefreshTokenGuard extends AuthGuard('jwt-refresh') {
     if (exception) {
       if (exception.constructor.name == 'TokenExpiredError') {
         throw new UnauthorizedException(Exception.JWT_REFRESH_TOKEN_EXPIRATION);
+      } else {
+        throw new UnauthorizedException(Exception.JWT_ACCESS_TOKEN_INVALID);
       }
-      throw exception;
     }
   }
 }

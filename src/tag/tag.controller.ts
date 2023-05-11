@@ -7,7 +7,12 @@ export class TagController {
   constructor(private readonly tagService: TagService) {}
 
   @Get()
-  async find(@Query('search') search: string): Promise<Tag[]> {
-    return await this.tagService.find(search);
+  async find(
+    @Query('search') search: string,
+    @Query('tag') tags: undefined | string | string[],
+  ): Promise<Tag[]> {
+    const tagIds =
+      tags !== undefined ? [tags].flat().map((tag) => +tag) : undefined;
+    return await this.tagService.find(search, tagIds);
   }
 }

@@ -59,6 +59,7 @@ export class UserService {
         _count: {
           select: {
             reviews: true,
+            reviewLikes: true,
           },
         },
       },
