@@ -38,7 +38,6 @@ export class CreationController {
   }
 
   @Get(':id')
-  @UseGuards(AccessTokenGuard)
   async findOne(
     @Param('id', ParseIntPipe) id: number,
     @AuthUserId() userId: number | undefined,
