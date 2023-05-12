@@ -54,6 +54,9 @@ export class CreationService {
           },
         },
       },
+      orderBy: {
+        title: 'asc',
+      },
     });
 
     return await Promise.all(

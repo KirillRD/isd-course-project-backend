@@ -29,6 +29,9 @@ export class ReviewCommentService {
           },
         },
       },
+      orderBy: {
+        createDate: 'asc',
+      },
     });
   }
 }

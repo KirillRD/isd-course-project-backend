@@ -10,7 +10,15 @@ export class ReviewDto implements ReviewSchema {
   body: string;
   grade: number;
   createDate: Date;
-  user?: User;
+  user?: {
+    id: number;
+    name: string;
+    reviews: {
+      _count: {
+        userLikes: number;
+      };
+    }[];
+  };
   creation?: CreationDto;
   tags?: Tag[];
   images?: ReviewImage[];

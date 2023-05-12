@@ -97,10 +97,16 @@ export class ReviewService {
       orderBy: [...reviewOrderOptions[queries.order]],
       include: {
         user: {
-          include: {
-            _count: {
+          select: {
+            id: true,
+            name: true,
+            reviews: {
               select: {
-                reviewLikes: true,
+                _count: {
+                  select: {
+                    userLikes: true,
+                  },
+                },
               },
             },
           },
@@ -138,10 +144,16 @@ export class ReviewService {
       where: { id },
       include: {
         user: {
-          include: {
-            _count: {
+          select: {
+            id: true,
+            name: true,
+            reviews: {
               select: {
-                reviewLikes: true,
+                _count: {
+                  select: {
+                    userLikes: true,
+                  },
+                },
               },
             },
           },

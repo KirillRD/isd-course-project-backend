@@ -24,6 +24,9 @@ export class TagService {
           },
         },
       },
+      orderBy: {
+        name: 'asc',
+      },
     });
   }
 }

@@ -56,6 +56,15 @@ export class UserService {
         ],
       },
       include: {
+        reviews: {
+          select: {
+            _count: {
+              select: {
+                userLikes: true,
+              },
+            },
+          },
+        },
         _count: {
           select: {
             reviews: true,
@@ -63,6 +72,14 @@ export class UserService {
           },
         },
       },
+      orderBy: [
+        {
+          name: 'asc',
+        },
+        {
+          email: 'asc',
+        },
+      ],
     });
   }
 
@@ -79,6 +96,14 @@ export class UserService {
         reviews: {
           include: {
             creation: true,
+            _count: {
+              select: {
+                userLikes: true,
+              },
+            },
+          },
+          orderBy: {
+            createDate: 'desc',
           },
         },
       },
