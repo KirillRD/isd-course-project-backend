@@ -1,6 +1,5 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateCreationDto } from './dto/create-creation.dto';
-import { UpdateCreationDto } from './dto/update-creation.dto';
 import { Creation, CreationCategory } from '@prisma/client';
 import { Exception } from 'src/exceptions';
 import { CreationDto } from 'src/creation/dto/creation.dto';

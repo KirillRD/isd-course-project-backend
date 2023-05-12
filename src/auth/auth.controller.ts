@@ -115,7 +115,6 @@ export class AuthController {
   }
 
   @Post(`${REFRESH_TOKEN_PATH}/refresh-tokens`)
-  @Csrf()
   @UseGuards(RefreshTokenGuard)
   async refreshTokens(
     @AuthUser() authUser: AuthUserData,
