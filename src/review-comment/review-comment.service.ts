@@ -20,10 +20,16 @@ export class ReviewCommentService {
       },
       include: {
         user: {
-          include: {
-            _count: {
+          select: {
+            id: true,
+            name: true,
+            reviews: {
               select: {
-                reviewLikes: true,
+                _count: {
+                  select: {
+                    userLikes: true,
+                  },
+                },
               },
             },
           },
