@@ -6,6 +6,7 @@ import algoliasearch, { SearchClient, SearchIndex } from 'algoliasearch';
 export class AlgoliaService {
   readonly algoliaClient: SearchClient;
   readonly REVIEW_INDEX = 'review';
+  readonly REVIEW_COMMENT_ID_PREFIX = 'review_comment_';
 
   constructor(private readonly config: ConfigService) {
     this.algoliaClient = algoliasearch(

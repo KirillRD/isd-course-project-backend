@@ -19,7 +19,7 @@ export class AlgoliaSchedule {
     const reviewComments = (await this.prisma.reviewComment.findMany()).map(
       (reviewComment) => ({
         ...reviewComment,
-        objectID: reviewComment.id,
+        objectID: `${this.algoliaService.REVIEW_COMMENT_ID_PREFIX}${reviewComment.id}`,
       }),
     );
     const index = this.algoliaService.initReviewIndex();
